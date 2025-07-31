@@ -64,9 +64,11 @@ class WebDriverManager:
             chrome_options.add_argument('--disable-extensions')
             chrome_options.add_argument('--disable-plugins')
             chrome_options.add_argument('--disable-images')  # 禁用图片加载提高速度
-            chrome_options.add_argument('--disable-javascript')  # 根据需要可以启用
             chrome_options.add_argument('--disable-gpu')
             chrome_options.add_argument('--disable-software-rasterizer')
+            chrome_options.add_argument('--remote-debugging-port=9222')  # 添加调试端口
+            chrome_options.add_argument('--disable-web-security')  # 禁用web安全检查
+            chrome_options.add_argument('--allow-running-insecure-content')  # 允许不安全内容
             
             # 性能优化配置
             chrome_options.add_argument('--memory-pressure-off')

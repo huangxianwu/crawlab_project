@@ -11,8 +11,9 @@ class Config:
     
     # ==================== 目标网站配置 ====================
     
-    # 目标电商网站URL（基于TikTok Shop）
+    # 目标电商网站URL（基于TikTok Shop，备用淘宝）
     TARGET_URL = "https://www.tiktok.com/shop/search"
+    BACKUP_TARGET_URL = "https://s.taobao.com/search"  # 备用网站
     BASE_URL = "https://www.tiktok.com"
     
     # API接口配置（参考TikTok项目）
