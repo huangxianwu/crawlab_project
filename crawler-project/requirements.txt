@@ -10,3 +10,18 @@ numpy>=1.24.0
 
 # 工具依赖
 python-dateutil>=2.8.0
+
+# 浏览器驱动管理
+webdriver-manager>=4.0.0
+
+# 数据处理
+pandas>=2.0.0
+
+# 配置文件处理
+pyyaml>=6.0.0
+
+# 图像处理 (滑块处理用)
+pillow>=10.0.0
+
+# 随机数据生成
+fake-useragent>=1.4.0
