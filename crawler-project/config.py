@@ -1,56 +1,82 @@
 """
 爬虫配置管理
-集中管理所有配置参数
+基于TikTok项目实战经验的完整配置
+参考: https://github.com/huangxianwu/tiktok_web_crawler_pyqt
 """
 import os
 from typing import List
 
 
 class Config:
-    """爬虫配置类"""
+    """爬虫配置类 - 基于TikTok项目实战经验"""
     
     # ==================== 目标网站配置 ====================
     
-    # 目标电商网站URL（基于TikTok Shop，备用淘宝）
-    TARGET_URL = "https://www.tiktok.com/shop/search"
-    BACKUP_TARGET_URL = "https://s.taobao.com/search"  # 备用网站
+    # TikTok Shop URL配置（重要：确保URL正确）
     BASE_URL = "https://www.tiktok.com"
+    TARGET_URL = "https://www.tiktok.com/shop"
+    SHOP_BASE_URL = "https://www.tiktok.com/shop"
+    SEARCH_BASE_URL = "https://www.tiktok.com/shop/s"  # 搜索基础URL
     
-    # API接口配置（参考TikTok项目）
-    API_URLS = {
-        "product_list": "https://www.tiktok.com/api/shop/brandy_desktop/s/product_list",
-        "store_products": "https://www.tiktok.com/api/shop/brandy_desktop/store/product_list",
-        "product_detail": "https://www.tiktok.com/api/shop/brandy_desktop/product/detail"
-    }
+    # 搜索URL构建方法
+    @classmethod
+    def build_search_url(cls, keyword: str) -> str:
+        """
+        构建TikTok Shop搜索URL
+        格式: https://www.tiktok.com/shop/s/{encoded_keyword}
+        
+        Args:
+            keyword: 搜索关键词
+            
+        Returns:
+            str: 完整的搜索URL
+        """
+        import urllib.parse
+        encoded_keyword = urllib.parse.quote(keyword)
+        return f"{cls.SEARCH_BASE_URL}/{encoded_keyword}"
     
-    # 搜索相关选择器（基于TikTok Shop页面结构）
+    # ==================== 页面选择器配置 ====================
+    
+    # 搜索相关选择器
     SEARCH_INPUT_SELECTOR = "input[placeholder*='Search']"  # 搜索输入框
     SEARCH_BUTTON_SELECTOR = "button[type='submit']"  # 搜索按钮
+    SEARCH_RESULTS_SELECTOR = "[data-e2e='search-result']"  # 搜索结果容器
     
-    # 商品信息选择器（基于TikTok Shop商品卡片结构）
+    # 商品相关选择器（基于TikTok Shop实际页面结构）
+    PRODUCT_LIST_SELECTOR = "[data-e2e='search-product-list']"  # 商品列表容器
     PRODUCT_CARD_SELECTOR = "[data-e2e='search-product-item']"  # 商品卡片
     PRODUCT_TITLE_SELECTOR = "[data-e2e='product-title']"  # 商品标题
     PRODUCT_PRICE_SELECTOR = "[data-e2e='product-price']"  # 商品价格
-    PRODUCT_LINK_SELECTOR = "a[href*='/product/']"  # 商品链接
-    PRODUCT_IMAGE_SELECTOR = "img[alt*='product']"  # 商品图片
-    PRODUCT_SHOP_SELECTOR = "[data-e2e='shop-name']"  # 店铺名称
-    PRODUCT_RATING_SELECTOR = "[data-e2e='product-rating']"  # 商品评分
-    PRODUCT_SALES_SELECTOR = "[data-e2e='product-sales']"  # 销量信息
+    PRODUCT_IMAGE_SELECTOR = "[data-e2e='product-image']"  # 商品图片
+    PRODUCT_LINK_SELECTOR = "a[data-e2e='product-link']"  # 商品链接
+    SHOP_NAME_SELECTOR = "[data-e2e='shop-name']"  # 店铺名称
     
-    # 分页相关选择器
-    NEXT_PAGE_SELECTOR = "[data-e2e='search-pagination-next']"  # 下一页按钮
-    PAGE_INFO_SELECTOR = "[data-e2e='pagination-info']"  # 页面信息
-    LOAD_MORE_SELECTOR = "[data-e2e='load-more-button']"  # 加载更多按钮
+    # 备用选择器（当data-e2e属性不可用时）
+    PRODUCT_CARD_BACKUP = ".product-card, .item-card, [class*='product']"
+    PRODUCT_TITLE_BACKUP = ".product-title, .item-title, h3, h4, [class*='title']"
+    PRODUCT_PRICE_BACKUP = ".price, .product-price, [class*='price']"
+    PRODUCT_IMAGE_BACKUP = "img[alt*='product'], img[class*='product']"
     
-    # 滑块验证相关选择器（基于TikTok验证码）
+    # ==================== 滑块验证配置 ====================
+    
+    # 滑块检测选择器（基于TikTok实际验证码结构）
     CAPTCHA_CONTAINER_SELECTOR = "#captcha_container"  # 验证码容器
+    CAPTCHA_WRAPPER_SELECTOR = ".secsdk-captcha-drag-wrapper"  # 滑块包装器
+    CAPTCHA_VISIBLE_SELECTOR = "[style*='display: block']"  # 可见的验证码
+    
+    # 滑块操作选择器
     SLIDER_TRACK_SELECTOR = ".secsdk-captcha-drag-wrapper"  # 滑块轨道
     SLIDER_BUTTON_SELECTOR = ".secsdk-captcha-drag-icon"  # 滑块按钮
+    SLIDER_DRAG_ELEMENT_XPATH = "//*[@id='secsdk-captcha-drag-wrapper']/div[2]"  # 拖拽元素
+    
+    # 验证码图片选择器
     CAPTCHA_IMAGE_SELECTOR = ".captcha-verify-image"  # 验证码图片
+    BACKGROUND_IMAGE_SELECTOR = ".captcha-verify-image:first-child"  # 背景图
+    SLIDER_IMAGE_SELECTOR = ".captcha-verify-image:last-child"  # 滑块图
     
     # ==================== 爬虫行为配置 ====================
     
-    # 请求延时配置（秒）
+    # 延时配置（秒）
     MIN_DELAY = 2  # 最小延时
     MAX_DELAY = 5  # 最大延时
     PAGE_LOAD_TIMEOUT = 30  # 页面加载超时
@@ -63,26 +89,23 @@ class Config:
     # 滑块处理配置
     SLIDER_MAX_RETRY = 3  # 滑块最大重试次数
     SLIDER_TIMEOUT = 30  # 滑块处理超时时间
+    SLIDE_DURATION = 0.2  # 滑动持续时间（秒）
     
     # ==================== 浏览器配置 ====================
     
-    # Chrome浏览器配置
+    # Chrome浏览器选项
     CHROME_OPTIONS = [
         "--no-sandbox",
         "--disable-dev-shm-usage",
         "--disable-blink-features=AutomationControlled",
         "--disable-extensions",
         "--disable-plugins",
-        "--disable-images",  # 禁用图片加载以提高速度
-        "--disable-javascript",  # 根据需要启用/禁用JS
     ]
     
-    # User-Agent池
+    # User-Agent池（模拟真实浏览器）
     USER_AGENTS = [
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
     ]
     
     # 窗口大小配置
@@ -90,7 +113,6 @@ class Config:
         (1920, 1080),
         (1366, 768),
         (1440, 900),
-        (1536, 864),
     ]
     
     # ==================== 数据库配置 ====================
@@ -119,15 +141,15 @@ class Config:
     LOG_FORMAT = "[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s"
     LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
     
-    # ==================== 关键词配置 ====================
+    # ==================== 测试关键词配置 ====================
     
     # 默认测试关键词
     DEFAULT_KEYWORDS = [
-        "手机壳",
-        "数据线",
-        "充电器",
-        "耳机",
-        "手机支架"
+        "cute clothes",
+        "phone case", 
+        "wireless charger",
+        "bluetooth headphones",
+        "laptop stand"
     ]
     
     # 关键词文件路径
@@ -149,13 +171,6 @@ class Config:
     
     # 每页最大采集商品数
     MAX_PRODUCTS_PER_PAGE = 50
-    
-    # ==================== 代理配置 ====================
-    
-    # 代理配置（暂时不启用）
-    USE_PROXY = False
-    PROXY_LIST = []
-    PROXY_TIMEOUT = 10
     
     # ==================== 调试配置 ====================
     
@@ -212,6 +227,10 @@ class Config:
             assert cls.MAX_RETRY > 0, "MAX_RETRY必须大于0"
             assert cls.PAGE_LOAD_TIMEOUT > 0, "PAGE_LOAD_TIMEOUT必须大于0"
             
+            # 验证URL格式
+            assert cls.BASE_URL.startswith("https://"), "BASE_URL必须是HTTPS"
+            assert cls.SEARCH_BASE_URL.startswith("https://"), "SEARCH_BASE_URL必须是HTTPS"
+            
             return True
             
         except Exception as e:
@@ -221,11 +240,18 @@ class Config:
     @classmethod
     def print_config(cls):
         """打印当前配置信息"""
-        print("当前配置信息:")
-        print(f"  目标网站: {cls.TARGET_URL}")
+        print("TikTok爬虫配置信息:")
+        print(f"  基础URL: {cls.BASE_URL}")
+        print(f"  搜索URL: {cls.SEARCH_BASE_URL}")
         print(f"  数据库: {cls.MONGO_URI}")
         print(f"  延时范围: {cls.MIN_DELAY}-{cls.MAX_DELAY}秒")
         print(f"  最大重试: {cls.MAX_RETRY}次")
+        print(f"  滑块重试: {cls.SLIDER_MAX_RETRY}次")
         print(f"  调试模式: {cls.DEBUG_MODE}")
         print(f"  无头模式: {cls.HEADLESS_MODE}")
         print(f"  关键词数量: {len(cls.get_keywords())}个")
+        
+        # 测试URL构建
+        test_keyword = "cute clothes"
+        test_url = cls.build_search_url(test_keyword)
+        print(f"  测试URL: {test_url}")

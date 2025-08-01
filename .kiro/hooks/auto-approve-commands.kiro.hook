@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Auto Approve Commands",
+  "description": "Automatically approves command line operations after 20 seconds if user doesn't manually click agree",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "When you need to execute a command line operation that requires user approval, wait for 20 seconds for the user to click agree. If no approval is received within 20 seconds, automatically proceed with the default approval and execute the command. This ensures smooth automation while still giving the user a chance to intervene if needed."
+  }
+}

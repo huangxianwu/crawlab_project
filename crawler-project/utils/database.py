@@ -120,12 +120,24 @@ class DatabaseManager:
             self.logger.error(f"批量插入异常: {e}")
             return 0
     
-    def find_products_by_keyword(self, keyword: str) -> List[ProductData]:
+    def save_product(self, product: ProductData) -> bool:
         """
-        根据关键词查询商品数据
+        保存商品数据（兼容新旧接口）
         
         Args:
-            keyword: 搜索关键词
+            product: ProductData对象
+            
+        Returns:
+            bool: 保存是否成功
+        """
+        return self.insert_product(product)
+    
+    def find_products(self, query: Dict = None) -> List[ProductData]:
+        """
+        根据查询条件查找商品
+        
+        Args:
+            query: 查询条件字典
             
         Returns:
             List[ProductData]: 商品数据列表
@@ -135,7 +147,10 @@ class DatabaseManager:
                 self.logger.error("数据库未连接")
                 return []
             
-            cursor = self.collection.find({"keyword": keyword})
+            if query is None:
+                query = {}
+            
+            cursor = self.collection.find(query)
             products = []
             
             for doc in cursor:
@@ -146,7 +161,7 @@ class DatabaseManager:
                     self.logger.warning(f"解析商品数据失败: {e}")
                     continue
             
-            self.logger.info(f"查询到关键词'{keyword}'的商品数据: {len(products)}条")
+            self.logger.info(f"查询到商品数据: {len(products)}条")
             return products
             
         except PyMongoError as e:
@@ -155,6 +170,52 @@ class DatabaseManager:
         except Exception as e:
             self.logger.error(f"查询数据异常: {e}")
             return []
+    
+    def count_products(self, query: Dict = None) -> int:
+        """
+        统计商品数量
+        
+        Args:
+            query: 查询条件字典
+            
+        Returns:
+            int: 商品数量
+        """
+        try:
+            if self.collection is None:
+                self.logger.error("数据库未连接")
+                return 0
+            
+            if query is None:
+                query = {}
+            
+            count = self.collection.count_documents(query)
+            return count
+            
+        except PyMongoError as e:
+            self.logger.error(f"统计商品数量失败: {e}")
+            return 0
+        except Exception as e:
+            self.logger.error(f"统计数量异常: {e}")
+            return 0
+    
+    def close(self):
+        """关闭数据库连接（别名）"""
+        self.disconnect()
+    
+    def find_products_by_keyword(self, keyword: str) -> List[ProductData]:
+        """
+        根据关键词查询商品数据
+        
+        Args:
+            keyword: 搜索关键词
+            
+        Returns:
+            List[ProductData]: 商品数据列表
+        """
+        # 兼容新旧字段名
+        query = {"$or": [{"keyword": keyword}, {"search_keyword": keyword}]}
+        return self.find_products(query)
     
     def find_all_products(self, limit: int = 100) -> List[ProductData]:
         """
