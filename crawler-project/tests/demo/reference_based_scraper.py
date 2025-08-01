@@ -253,26 +253,107 @@ class ReferenceBasedScraper:
                 product_rating = review_detail.get("product_rating", 0.0)
                 review_count_str = review_detail.get("review_count_str", "0")
                 
-                # 尝试获取评论时间信息
-                try:
-                    # 从评论详情中获取时间信息
-                    reviews = review_detail.get("reviews", [])
-                    if reviews:
-                        # 获取最新评论时间
-                        latest_review = reviews[0] if reviews else {}
-                        latest_review_fmt = latest_review.get("create_time", "")
-                        
-                        # 获取最早评论时间
-                        earliest_review = reviews[-1] if reviews else {}
-                        earliest_review_fmt = earliest_review.get("create_time", "")
-                except:
-                    pass
+                # 调试：输出评论详情数据结构
+                logger.info(f"🔍 调试评论数据结构: {list(review_detail.keys())}")
                 
-                # 如果从评论详情中获取不到，尝试从其他字段获取
-                if not latest_review_fmt:
-                    latest_review_fmt = review_detail.get("latest_review_time", "")
-                if not earliest_review_fmt:
-                    earliest_review_fmt = review_detail.get("earliest_review_time", "")
+                # 输出完整的评论数据用于调试
+                logger.info(f"🔍 完整评论数据: {json.dumps(review_detail, indent=2, ensure_ascii=False)[:500]}...")
+                
+                # 提取评论时间信息 - 基于参考项目的完整实现
+                try:
+                    # 获取评论时间数据
+                    review_time_info = review_detail.get("review_time_info", {})
+                    if review_time_info:
+                        # 最新评论时间
+                        latest_time = review_time_info.get("latest_review_time")
+                        if latest_time:
+                            try:
+                                # 转换时间戳为可读格式
+                                if isinstance(latest_time, (int, float)):
+                                    latest_review_fmt = datetime.fromtimestamp(latest_time).strftime("%Y-%m-%d")
+                                elif isinstance(latest_time, str):
+                                    latest_review_fmt = latest_time
+                            except:
+                                latest_review_fmt = str(latest_time) if latest_time else ""
+                        
+                        # 最早评论时间
+                        earliest_time = review_time_info.get("earliest_review_time")
+                        if earliest_time:
+                            try:
+                                # 转换时间戳为可读格式
+                                if isinstance(earliest_time, (int, float)):
+                                    earliest_review_fmt = datetime.fromtimestamp(earliest_time).strftime("%Y-%m-%d")
+                                elif isinstance(earliest_time, str):
+                                    earliest_review_fmt = earliest_time
+                            except:
+                                earliest_review_fmt = str(earliest_time) if earliest_time else ""
+                    
+                    # 如果没有review_time_info，尝试从其他字段获取
+                    if not latest_review_fmt and not earliest_review_fmt:
+                        logger.info("🔍 review_time_info中没有找到时间数据，尝试其他字段")
+                        
+                        # 尝试从review_detail的其他字段获取时间信息
+                        if "latest_review_date" in review_detail:
+                            latest_review_fmt = str(review_detail["latest_review_date"])
+                            logger.info(f"🔍 从latest_review_date获取: {latest_review_fmt}")
+                        if "earliest_review_date" in review_detail:
+                            earliest_review_fmt = str(review_detail["earliest_review_date"])
+                            logger.info(f"🔍 从earliest_review_date获取: {earliest_review_fmt}")
+                        
+                        # 如果还是没有，尝试从reviews列表中获取
+                        reviews = review_detail.get("reviews", [])
+                        review_items = review_detail.get("review_items", [])
+                        
+                        # 合并所有可能的评论数据源
+                        all_reviews = []
+                        if reviews:
+                            all_reviews.extend(reviews)
+                        if review_items:
+                            # review_items 结构: [{"review": {...}}]
+                            for item in review_items:
+                                if "review" in item:
+                                    all_reviews.append(item["review"])
+                        
+                        if all_reviews:
+                            review_times = []
+                            logger.info(f"🔍 找到 {len(all_reviews)} 个评论，尝试提取时间")
+                            
+                            for review in all_reviews:
+                                # 尝试多种可能的时间字段
+                                review_time = (review.get("create_time") or 
+                                             review.get("review_time") or 
+                                             review.get("review_timestamp"))
+                                if review_time:
+                                    try:
+                                        if isinstance(review_time, (int, float)):
+                                            # 处理秒级时间戳
+                                            review_times.append(datetime.fromtimestamp(review_time))
+                                        elif isinstance(review_time, str):
+                                            # 尝试解析字符串时间戳（毫秒级）
+                                            if review_time.isdigit():
+                                                timestamp = int(review_time)
+                                                # 如果是毫秒级时间戳，转换为秒
+                                                if timestamp > 1000000000000:  # 毫秒级时间戳
+                                                    timestamp = timestamp / 1000
+                                                review_times.append(datetime.fromtimestamp(timestamp))
+                                                logger.info(f"🔍 解析时间戳: {review_time} -> {datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')}")
+                                            else:
+                                                # 尝试解析ISO格式时间
+                                                review_times.append(datetime.fromisoformat(review_time.replace('Z', '+00:00')))
+                                    except Exception as e:
+                                        logger.debug(f"🔍 时间解析失败: {review_time} - {e}")
+                                        continue
+                            
+                            if review_times:
+                                review_times.sort()
+                                earliest_review_fmt = review_times[0].strftime("%Y-%m-%d")
+                                latest_review_fmt = review_times[-1].strftime("%Y-%m-%d")
+                                logger.info(f"🔍 从评论列表获取时间: 最新={latest_review_fmt}, 最早={earliest_review_fmt}")
+                            else:
+                                logger.info("🔍 评论列表中没有有效的时间数据")
+                
+                except Exception as e:
+                    logger.warning(f"⚠️ 解析评论时间失败: {e}")
             
             # 图片信息 - 参考项目的字段
             product_image = ""
