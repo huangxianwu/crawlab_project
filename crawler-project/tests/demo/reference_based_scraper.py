@@ -8,7 +8,13 @@ import json
 import urllib.parse
 from datetime import datetime
 from typing import List, Dict, Optional
-from drissionpage_slider_handler import DrissionPageSliderHandler
+import sys
+import os
+
+# 添加项目路径
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from handlers.drissionpage_slider_handler import DrissionPageSliderHandler
 from models.product import ProductData
 from utils.database import DatabaseManager
 from utils.logger import get_logger
@@ -246,12 +252,41 @@ class ReferenceBasedScraper:
             if review_detail:
                 product_rating = review_detail.get("product_rating", 0.0)
                 review_count_str = review_detail.get("review_count_str", "0")
+                
+                # 尝试获取评论时间信息
+                try:
+                    # 从评论详情中获取时间信息
+                    reviews = review_detail.get("reviews", [])
+                    if reviews:
+                        # 获取最新评论时间
+                        latest_review = reviews[0] if reviews else {}
+                        latest_review_fmt = latest_review.get("create_time", "")
+                        
+                        # 获取最早评论时间
+                        earliest_review = reviews[-1] if reviews else {}
+                        earliest_review_fmt = earliest_review.get("create_time", "")
+                except:
+                    pass
+                
+                # 如果从评论详情中获取不到，尝试从其他字段获取
+                if not latest_review_fmt:
+                    latest_review_fmt = review_detail.get("latest_review_time", "")
+                if not earliest_review_fmt:
+                    earliest_review_fmt = review_detail.get("earliest_review_time", "")
             
             # 图片信息 - 参考项目的字段
             product_image = ""
             images = product_info.get("product_base", {}).get("images", [])
             if images:
                 product_image = images[0].get("url_list", [""])[0]
+            
+            # 商品链接 - 新增字段
+            product_url = ""
+            try:
+                # 构建商品链接
+                product_url = f"https://www.tiktok.com/shop/product/{product_id}"
+            except:
+                pass
             
             # 分类信息 - 参考项目的字段
             categories = "TikTok Shop"
@@ -276,6 +311,7 @@ class ReferenceBasedScraper:
                 'origin_price': origin_price,
                 'current_price': current_price,
                 'product_image': product_image,
+                'product_url': product_url,  # 新增：商品链接
                 'shipping_fee': shipping_fee,
                 'sold_count': sold_count,
                 'product_rating': product_rating,

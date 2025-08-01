@@ -22,6 +22,7 @@ class ProductData:
     
     # 商品信息
     product_image: str = ""
+    product_url: str = ""  # 新增：商品链接
     categories: str = ""
     desc_detail: str = ""
     
@@ -66,6 +67,7 @@ class ProductData:
             
             # 商品信息
             "product_image": self.product_image,
+            "product_url": self.product_url,
             "categories": self.categories,
             "desc_detail": self.desc_detail,
             
@@ -112,6 +114,7 @@ class ProductData:
             
             # 商品信息
             product_image=data.get("product_image", ""),
+            product_url=data.get("product_url", ""),
             categories=data.get("categories", ""),
             desc_detail=data.get("desc_detail", ""),
             
