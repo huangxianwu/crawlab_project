@@ -9,6 +9,10 @@ echo "=================================="
 echo "📦 第一步：安装系统依赖..."
 apt-get update && apt-get install -y libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender-dev libgomp1
 
+# 第一步补充：安装Chrome浏览器
+echo "🌐 第一步补充：安装Chrome浏览器..."
+bash install_chrome.sh
+
 if [ $? -eq 0 ]; then
     echo "✅ 系统依赖安装成功"
 else
@@ -32,8 +36,8 @@ fi
 echo "🧪 第三步：运行环境测试..."
 python test_crawlab_env.py
 
-# 第四步：运行修复版爬虫
-echo "🎯 第四步：运行修复版爬虫..."
-python crawlab_fixed_runner.py
+# 第四步：运行终极修复版爬虫
+echo "🎯 第四步：运行终极修复版爬虫..."
+python crawlab_ultimate_runner.py
 
 echo "🎉 部署和运行完成！"
