@@ -1,0 +1,111 @@
+{
+  "name": "电商滑块爬虫",
+  "display_name": "E-commerce Slider Crawler",
+  "description": "支持滑块验证的电商商品数据采集爬虫，基于ddddocr智能识别技术",
+  "type": "customized",
+  "cmd": "python crawlab_fixed_runner.py",
+  "param": [
+    {
+      "name": "keywords",
+      "display_name": "搜索关键词",
+      "description": "要搜索的商品关键词，多个关键词用逗号分隔",
+      "type": "string",
+      "default": "手机壳,数据线,充电器",
+      "required": true
+    },
+    {
+      "name": "max_pages",
+      "display_name": "最大页数",
+      "description": "每个关键词采集的最大页数",
+      "type": "int",
+      "default": 1,
+      "required": false
+    },
+    {
+      "name": "headless",
+      "display_name": "无头模式",
+      "description": "是否使用无头浏览器模式（Docker环境建议开启）",
+      "type": "bool",
+      "default": true,
+      "required": false
+    },
+    {
+      "name": "output",
+      "display_name": "输出文件",
+      "description": "数据输出文件路径（可选）",
+      "type": "string",
+      "default": "",
+      "required": false
+    }
+  ],
+  "env_vars": [
+    {
+      "name": "CRAWLAB_MONGO_HOST",
+      "value": "mongo"
+    },
+    {
+      "name": "CRAWLAB_MONGO_PORT", 
+      "value": "27017"
+    },
+    {
+      "name": "CRAWLAB_MONGO_DB",
+      "value": "crawlab_test"
+    },
+    {
+      "name": "CHROME_BIN",
+      "value": "/usr/bin/google-chrome"
+    },
+    {
+      "name": "DISPLAY",
+      "value": ":99"
+    }
+  ],
+  "tags": [
+    "电商",
+    "滑块验证", 
+    "数据采集",
+    "ddddocr",
+    "selenium"
+  ],
+  "category": "数据采集",
+  "priority": 5,
+  "is_public": false,
+  "is_long_task": true,
+  "auto_install": true,
+  "install_cmd": "apt-get update && apt-get install -y libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender-dev libgomp1 && pip uninstall opencv-python -y && pip install -r requirements.txt",
+  "results": {
+    "type": "table",
+    "fields": [
+      {
+        "name": "keyword",
+        "display_name": "关键词",
+        "type": "string"
+      },
+      {
+        "name": "title", 
+        "display_name": "商品标题",
+        "type": "string"
+      },
+      {
+        "name": "scraped_at",
+        "display_name": "采集时间",
+        "type": "datetime"
+      },
+      {
+        "name": "slider_encountered",
+        "display_name": "遇到滑块",
+        "type": "bool"
+      },
+      {
+        "name": "slider_solved",
+        "display_name": "滑块已解决",
+        "type": "bool"
+      }
+    ]
+  },
+  "schedule": {
+    "enabled": false,
+    "cron": "0 */6 * * *",
+    "description": "每6小时执行一次"
+  }
+}
