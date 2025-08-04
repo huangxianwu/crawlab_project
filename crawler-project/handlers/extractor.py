@@ -2,14 +2,85 @@
 数据提取器
 基于TikTok项目经验，提供商品数据提取功能
 """
+import os
+import sys
 import time
 import random
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
+# 🔧 关键修复：多重路径修复策略
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+
+# 多重路径修复策略
+paths_to_add = [
+    project_root,              # 项目根目录
+    current_dir,               # 当前目录
+    os.getcwd(),               # 工作目录
+    '.',                       # 相对当前目录
+]
+
+# 将所有可能的路径都添加到sys.path的最前面
+for path in reversed(paths_to_add):
+    abs_path = os.path.abspath(path)
+    if abs_path not in sys.path:
+        sys.path.insert(0, abs_path)
+
+# 🔍 增强调试信息 - 始终显示以便Crawlab调试
+print("🔍 [DEBUG] handlers/extractor.py 路径调试信息")
+print(f"[DEBUG] 当前文件: {__file__}")
+print(f"[DEBUG] current_dir: {current_dir}")
+print(f"[DEBUG] project_root: {project_root}")
+print(f"[DEBUG] 工作目录: {os.getcwd()}")
+print(f"[DEBUG] sys.path前5个:")
+for i, path in enumerate(sys.path[:5]):
+    print(f"  {i}: {path}")
+
+# 检查关键文件是否存在
+key_files = ['utils/__init__.py', 'utils/logger.py', 'config.py', 'models/__init__.py']
+for file_path in key_files:
+    full_path = os.path.join(project_root, file_path)
+    exists = os.path.exists(full_path)
+    print(f"[DEBUG] {file_path}: 存在={exists} ({full_path})")
+
+# 尝试直接导入测试
+print(f"[DEBUG] handlers/extractor.py 导入测试:")
+try:
+    import utils
+    print(f"  ✅ import utils 成功")
+except Exception as e:
+    print(f"  ❌ import utils 失败: {e}")
+
+try:
+    from utils.logger import get_logger
+    print(f"  ✅ from utils.logger import get_logger 成功")
+except Exception as e:
+    print(f"  ❌ from utils.logger import get_logger 失败: {e}")
+
+try:
+    import config
+    print(f"  ✅ import config 成功")
+except Exception as e:
+    print(f"  ❌ import config 失败: {e}")
+
+try:
+    from models.product import ProductData
+    print(f"  ✅ from models.product import ProductData 成功")
+except Exception as e:
+    print(f"  ❌ from models.product import ProductData 失败: {e}")
+
+print("-" * 40)
+
+# 强制刷新模块缓存（防止缓存问题）
+modules_to_clear = ['utils', 'config', 'models']
+for module in modules_to_clear:
+    if module in sys.modules:
+        del sys.modules[module]
+
 from models.product import ProductData
-from utils.logger import get_logger
 from config import Config
+from utils.logger import get_logger
 
 logger = get_logger(__name__)
 

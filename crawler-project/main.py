@@ -8,8 +8,10 @@ import os
 import logging
 from datetime import datetime
 
-# 添加项目路径
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# 路径修复 - 确保能找到项目模块
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
 
 from config import Config
 from utils.logger import setup_logger

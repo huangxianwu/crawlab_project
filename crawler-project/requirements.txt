@@ -5,7 +5,7 @@ requests>=2.31.0
 
 # 滑块处理依赖 (后续任务使用)
 ddddocr>=1.4.7
-opencv-python>=4.8.0
+opencv-python-headless>=4.8.0
 numpy>=1.24.0
 
 # 工具依赖

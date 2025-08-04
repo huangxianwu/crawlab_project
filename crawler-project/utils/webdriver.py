@@ -63,7 +63,7 @@ class WebDriverManager:
             chrome_options.add_argument('--disable-blink-features=AutomationControlled')
             chrome_options.add_argument('--disable-extensions')
             chrome_options.add_argument('--disable-plugins')
-            chrome_options.add_argument('--disable-images')  # 禁用图片加载提高速度
+            # chrome_options.add_argument('--disable-images')  # 启用图片加载以支持滑块验证
             chrome_options.add_argument('--disable-gpu')
             chrome_options.add_argument('--disable-software-rasterizer')
             chrome_options.add_argument('--remote-debugging-port=9222')  # 添加调试端口
@@ -98,14 +98,14 @@ class WebDriverManager:
             prefs = {
                 'profile.default_content_setting_values': {
                     'notifications': 2,  # 禁用通知
-                    'images': 2,  # 禁用图片
+                    'images': 1,  # 启用图片以支持滑块验证
                     'plugins': 2,  # 禁用插件
                     'popups': 2,  # 禁用弹窗
                     'geolocation': 2,  # 禁用地理位置
                     'media_stream': 2,  # 禁用媒体流
                 },
                 'profile.managed_default_content_settings': {
-                    'images': 2
+                    'images': 1  # 启用图片
                 }
             }
             chrome_options.add_experimental_option('prefs', prefs)

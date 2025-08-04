@@ -7,10 +7,19 @@
 import time
 import random
 import requests
-import cv2
 import numpy as np
 from typing import Optional
 from DrissionPage import ChromiumPage, ChromiumOptions
+
+# 延迟导入OpenCV，避免系统依赖问题
+def get_cv2():
+    """延迟导入cv2，避免在模块加载时就失败"""
+    try:
+        import cv2
+        return cv2
+    except ImportError as e:
+        print(f"Warning: OpenCV导入失败: {e}")
+        return None
 
 try:
     import ddddocr
@@ -190,7 +199,11 @@ class DrissionPageSliderHandler:
                                 
                                 # 获取图片尺寸进行缩放 - 参考项目的精确算法
                                 img_array = np.frombuffer(background_bytes, dtype=np.uint8)
-                                img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+                                cv2 = get_cv2()
+                                if cv2:
+                                    img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+                                else:
+                                    img = None
                                 if img is not None:
                                     height, width = img.shape[:2]
                                     # 按比例缩放到实际滑块位置 - 参考项目的关键算法

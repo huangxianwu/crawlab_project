@@ -4,12 +4,86 @@
 参考: https://github.com/huangxianwu/tiktok_web_crawler_pyqt
 核心技术: 参考项目算法 + Selenium实现 + 精确位置计算
 """
+import os
+import sys
 import time
 import random
 import requests
-import cv2
 import numpy as np
 from typing import Optional, Tuple, List
+
+# 🔧 关键修复：多重路径修复策略
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+
+# 多重路径修复策略
+paths_to_add = [
+    project_root,              # 项目根目录
+    current_dir,               # 当前目录
+    os.getcwd(),               # 工作目录
+    '.',                       # 相对当前目录
+]
+
+# 将所有可能的路径都添加到sys.path的最前面
+for path in reversed(paths_to_add):
+    abs_path = os.path.abspath(path)
+    if abs_path not in sys.path:
+        sys.path.insert(0, abs_path)
+
+# 🔍 增强调试信息 - 始终显示以便Crawlab调试
+print("🔍 [DEBUG] handlers/slider.py 路径调试信息")
+print(f"[DEBUG] 当前文件: {__file__}")
+print(f"[DEBUG] current_dir: {current_dir}")
+print(f"[DEBUG] project_root: {project_root}")
+print(f"[DEBUG] 工作目录: {os.getcwd()}")
+print(f"[DEBUG] sys.path前5个:")
+for i, path in enumerate(sys.path[:5]):
+    print(f"  {i}: {path}")
+
+# 检查关键文件是否存在
+key_files = ['utils/__init__.py', 'utils/logger.py', 'config.py']
+for file_path in key_files:
+    full_path = os.path.join(project_root, file_path)
+    exists = os.path.exists(full_path)
+    print(f"[DEBUG] {file_path}: 存在={exists} ({full_path})")
+
+# 尝试直接导入测试
+print(f"[DEBUG] handlers/slider.py 导入测试:")
+try:
+    import utils
+    print(f"  ✅ import utils 成功")
+except Exception as e:
+    print(f"  ❌ import utils 失败: {e}")
+
+try:
+    from utils.logger import get_logger
+    print(f"  ✅ from utils.logger import get_logger 成功")
+except Exception as e:
+    print(f"  ❌ from utils.logger import get_logger 失败: {e}")
+
+try:
+    import config
+    print(f"  ✅ import config 成功")
+except Exception as e:
+    print(f"  ❌ import config 失败: {e}")
+
+print("-" * 40)
+
+# 强制刷新模块缓存（防止缓存问题）
+modules_to_clear = ['utils', 'config']
+for module in modules_to_clear:
+    if module in sys.modules:
+        del sys.modules[module]
+
+# 延迟导入OpenCV，避免系统依赖问题
+def get_cv2():
+    """延迟导入cv2，避免在模块加载时就失败"""
+    try:
+        import cv2
+        return cv2
+    except ImportError as e:
+        print(f"Warning: OpenCV导入失败: {e}")
+        return None
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
