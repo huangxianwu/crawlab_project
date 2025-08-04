@@ -238,8 +238,8 @@ class UltimateCrawlabCrawler:
             # 处理可能的验证码页面
             if "Security Check" in page_title or "captcha" in current_url.lower():
                 print("🧩 检测到验证码页面，开始完整处理...")
-                captcha_success = self.handle_advanced_captcha()
-                if not captcha_success:
+                has_captcha = self.handle_advanced_captcha()
+                if has_captcha:  # 如果返回True，表示有验证码但处理失败
                     print("❌ 验证码处理失败，无法继续采集")
                     return 0
                 print("✅ 验证码处理成功，继续采集数据")
@@ -288,7 +288,7 @@ class UltimateCrawlabCrawler:
                 print(f"安全检查页面: {has_security_check}")
                 
                 if not has_captcha_container and not has_security_check:
-                    return True  # 无验证码，处理成功
+                    return False  # 返回False表示无验证码（成功）
                 
                 if not has_captcha_container:
                     print("⚠️ 未找到captcha_container，但页面显示Security Check，继续处理")
@@ -318,8 +318,8 @@ class UltimateCrawlabCrawler:
                 print(f"筛选出 {len(visible_imgs)} 张可见的验证码图片")
                 
                 if len(visible_imgs) < 2:
-                    print("⚠️ 验证码图片不足，尝试简单处理")
-                    return self.handle_simple_captcha()
+                    print("⚠️ 验证码图片不足")
+                    continue
                 
                 # 使用筛选后的图片
                 imgs = visible_imgs
@@ -382,13 +382,29 @@ class UltimateCrawlabCrawler:
                                     slider_element.drag(actual_x, 10, 0.2)
                                     time.sleep(3)
                                     
-                                    # 检查验证码是否通过
+                                    # 检查验证码是否通过 - 多种检查方式
+                                    time.sleep(2)  # 等待页面响应
                                     new_html = self.page.html
-                                    if "captcha-verify-image" not in new_html:
+                                    new_title = self.page.title
+                                    new_url = self.page.url
+                                    
+                                    # 多重验证成功检查
+                                    success_indicators = [
+                                        "captcha-verify-image" not in new_html,
+                                        "Security Check" not in new_title,
+                                        "captcha" not in new_url.lower(),
+                                        "shop/s/" in new_url  # 回到搜索页面
+                                    ]
+                                    
+                                    if any(success_indicators):
                                         print("✅ 验证码处理成功")
-                                        return True
+                                        print(f"📄 新页面标题: {new_title}")
+                                        print(f"📄 新页面URL: {new_url}")
+                                        return False  # 返回False表示无验证码（成功）
                                     else:
                                         print("⚠️ 验证码未通过，准备重试")
+                                        print(f"📄 当前标题: {new_title}")
+                                        print(f"📄 当前URL: {new_url}")
                                 else:
                                     print("⚠️ 未找到滑块元素")
                             else:
@@ -415,13 +431,13 @@ class UltimateCrawlabCrawler:
                     print(f"⚠️ 验证码处理异常: {e}")
                     continue
             
-            # 所有尝试都失败了，尝试简单处理
-            print("❌ 完整验证码处理失败，尝试简单处理")
-            return self.handle_simple_captcha()
+            # 所有尝试都失败了
+            print("❌ 完整验证码处理失败，已尝试3次")
+            return True  # 返回True表示有验证码但处理失败
             
         except Exception as e:
             print(f"❌ 滑块处理异常: {e}")
-            return self.handle_simple_captcha()
+            return True  # 返回True表示有验证码但处理失败
     
     def handle_simple_captcha(self):
         """简单的验证码处理（备用方案）"""
@@ -452,11 +468,12 @@ class UltimateCrawlabCrawler:
                 slider.drag((200, 0), duration=0.5)
                 time.sleep(2)
             
-            return True
+            # 简单处理通常假设成功（因为无法精确验证）
+            return False  # 返回False表示无验证码（假设处理成功）
             
         except Exception as e:
             print(f"⚠️ 验证码处理失败: {e}")
-            return False
+            return True  # 返回True表示有验证码但处理失败
     
     def extract_products_robust(self, keyword: str) -> int:
         """健壮的商品数据提取"""
